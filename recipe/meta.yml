@@ -3,13 +3,14 @@ package:
   version: 0.0.0
 
 source:
-  git_url: https://github.com/hyoklee/iowarp-runtime
-  git_depth: 1
+   path: .
+#  git_url: https://github.com/hyoklee/iowarp-runtime
+#  git_depth: 1
 
 requirements:
   build:
     - numpy
-    - pandas    
+    - panda
     - scipy
     - scikit-learn
     - setuptools
