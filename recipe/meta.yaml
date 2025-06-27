@@ -1,0 +1,35 @@
+package:
+  name: chimaera
+  version: 0.0.0
+
+source:
+  git_url: https://github.com/hyoklee/iowarp-runtime
+  git_depth: 1
+
+requirements:
+  build:
+    - python
+    - numpy
+    - pandas
+    - scipy
+    - scikit-learn
+    - iowarp::scspkg
+  run:
+    - python
+    - iowarp::scspkg
+
+test:
+  requires:
+    - numpy
+    - pandas
+    - scipy
+    - scikit-learn
+    - setuptools
+    - iowarp::scspkg
+  commands:
+    - bench_chimaera_latency 0 1000 0
+
+about:
+  home: https://grc.iit.edu/research/projects/iowarp/
+  license: BSD
+  summary: IOWarp chimaera Conda Package
