@@ -1,4 +1,11 @@
-scipy
+boost
+elfutils
 numpy
-scikit-learn
+openmp
+openmpi
 pandas
+pybind11
+scikit-learn
+scipy
+snappy
+

@@ -8,11 +8,15 @@ source:
 
 requirements:
   build:
-    - python
+    - boost
     - numpy
+    - openmp
+    - openmpi
     - pandas
+    - pybind11
     - scipy
     - scikit-learn
+    - snappy
     - iowarp::scspkg
   run:
     - python
@@ -20,11 +24,15 @@ requirements:
 
 test:
   requires:
+    - boost
     - numpy
+    - openmp
+    - openmpi
     - pandas
+    - pybind11
     - scipy
     - scikit-learn
-    - setuptools
+    - snappy
     - iowarp::scspkg
   commands:
     - bench_chimaera_latency 0 1000 0
