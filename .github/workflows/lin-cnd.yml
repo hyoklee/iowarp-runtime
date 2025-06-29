@@ -23,6 +23,7 @@ jobs:
           channels: conda-forge,iowarp
       - name: build-conda
         run: |
+          export CMAKE_PREFIX_PATH=$CONDA_PREFIX
           env
           conda install -y conda-build
           conda install -y conda-verify
@@ -31,8 +32,8 @@ jobs:
       - name: upload
         uses: actions/upload-artifact@v4
         with:
-          name: chimaera-0.0.0-py312_0.tar.bz2
-          path: /usr/share/miniconda/envs/test/conda-bld/linux-64/chimaera-0.0.0-py312_0.tar.bz2
+          name: config-x64-linux-dbg-config.log
+          path: vcpkg/buildtrees/margo/config-x64-linux-dbg-config.log
       - name: release
         run: |
           anaconda -t  "${{ secrets.ANACONDA_TOKEN }}" upload /usr/share/miniconda/envs/test/conda-bld/linux-64/chimaera-0.0.0-py312_0.tar.bz2
