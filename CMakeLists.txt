@@ -135,6 +135,7 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 add_library(runtime_deps INTERFACE)
 target_link_libraries(runtime_deps INTERFACE
     ${Boost_LIBRARIES}
+    ${Boost_CONTEXT_LIBRARY}    
     ${OPTIONAL_LIBS}
     ${ALLOCATOR_LIBRARIES})
 target_include_directories(runtime_deps INTERFACE
