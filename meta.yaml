@@ -20,12 +20,16 @@ requirements:
     - scipy
     - scikit-learn
     - snappy
-    - iowarp::scspkg
-    - iowarp::margo
+    - iowarp::argobots
+    - iowarp::margo    
+    - iowarp::mercury
+    - iowarp::scspkg    
   run:
     - python
-    - iowarp::scspkg
+    - iowarp::argobots
     - iowarp::margo
+    - iowarp::mercury    
+    - iowarp::scspkg
 test:
   requires:
     - autoconf
@@ -40,9 +44,10 @@ test:
     - scikit-learn
     - snappy
     - iowarp::scspkg
-    - iowarp::margo    
+    - iowarp::margo
+    - iowarp::argobots    
   commands:
-    - bench_chimaera_latency 0 1000 0
+    - pip --help
 
 about:
   home: https://grc.iit.edu/research/projects/iowarp/

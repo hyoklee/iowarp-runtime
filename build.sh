@@ -8,7 +8,11 @@ export PKG_CONFIG_PATH=$CONDA_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH
 # ./vcpkg install margo
 # cd ..
 # sh env.sh
-cmake -B build .
+mkdir build
+cd build 
+cmake ..
+cmake --build . --config Release 
+# cmake --install . --config Release 
 # make -C build -j 4
 
 
