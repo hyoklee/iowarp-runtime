@@ -1,18 +1,10 @@
 rm -rf build
-export CMAKE_PREFIX_PATH=$PREFIX
+export CMAKE_PREFIX_PATH=$PREFIX:$CONDA_PREFIX/pkgs/mercury-0.0.0-py312_0/share/cmake
 export CMAKE_INCLUDE_PATH=$PREFIX/include
 export PKG_CONFIG_PATH=$CONDA_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH
-# git clone --single-branch https://github.com/hyoklee/vcpkg
-# cd vcpkg
-# ./bootstrap-vcpkg.sh
-# ./vcpkg install margo
-# cd ..
-# sh env.sh
-mkdir build
-cd build 
-cmake ..
-cmake --build . --config Release 
-# cmake --install . --config Release 
-# make -C build -j 4
+# export CC=/usr/bin/mpicc
+# export CXX=/usr/bin/mpicxx
+cmake -DBUILD_MPI_TESTS:BOOL=OFF -B build .
+make -C build -j 2
 
 

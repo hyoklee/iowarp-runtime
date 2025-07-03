@@ -84,7 +84,7 @@ elseif(CHIMAERA_ENABLE_ROCM)
   target_compile_definitions(chimaera_runtime PUBLIC CHIMAERA_ENABLE_ROCM)
 else()
   add_library(chimaera_runtime ${RUNTIME_SOURCES})
-  target_link_libraries(chimaera_runtime PUBLIC hshm::cxx)
+  target_link_libraries(chimaera_runtime PUBLIC hshm::cxx Boost::context)
 endif()
 
 target_link_libraries(chimaera_runtime PUBLIC runtime_deps)

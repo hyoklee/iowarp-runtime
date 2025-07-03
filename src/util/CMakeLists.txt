@@ -10,7 +10,7 @@ else()
 endif()
 
 add_dependencies(chimaera_start_runtime chimaera_runtime)
-target_link_libraries(chimaera_start_runtime PUBLIC chimaera_runtime)
+target_link_libraries(chimaera_start_runtime PUBLIC chimaera_runtime Boost::context)
 
 # ------------------------------------------------------------------------------
 # Build Chimaera Runtime Stop Function

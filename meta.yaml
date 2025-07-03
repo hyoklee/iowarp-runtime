@@ -11,25 +11,30 @@ requirements:
   build:
     - autoconf
     - boost
+#    - gcc
     - json-c
     - numpy
     - openmp
-    - openmpi
+#    - openmpi
     - pandas
     - pybind11
     - scipy
     - scikit-learn
     - snappy
     - iowarp::argobots
+    - iowarp::hshm
     - iowarp::margo    
     - iowarp::mercury
-    - iowarp::scspkg    
+    - iowarp::scspkg
+    - iowarp::thallium
   run:
     - python
     - iowarp::argobots
+    - iowarp::hshm    
     - iowarp::margo
     - iowarp::mercury    
     - iowarp::scspkg
+    - iowarp::thallium    
 test:
   requires:
     - autoconf
@@ -37,15 +42,17 @@ test:
     - json-c
     - numpy
     - openmp
-    - openmpi
+#    - openmpi
     - pandas
     - pybind11
     - scipy
     - scikit-learn
     - snappy
-    - iowarp::scspkg
+    - iowarp::argobots
+    - iowarp::hshm    
     - iowarp::margo
-    - iowarp::argobots    
+    - iowarp::mercury    
+    - iowarp::scspkg    
   commands:
     - pip --help
 

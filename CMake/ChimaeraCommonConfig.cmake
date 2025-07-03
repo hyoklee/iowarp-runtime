@@ -8,6 +8,9 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 find_package(HermesShm CONFIG REQUIRED)
 message(STATUS "found hermes_shm.h at ${HSHM_INSTALL_INCLUDE_DIR}")
 
+# Mercury
+find_package(mercury CONFIG REQUIRED)
+
 # MPICH
 if(BUILD_MPI_TESTS)
     find_package(MPI REQUIRED COMPONENTS C CXX)
