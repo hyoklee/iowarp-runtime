@@ -34,7 +34,9 @@ jobs:
       - name: cat log
         run: |
           ls /usr/share/miniconda/envs/test/conda-bld/
-          cat /usr/share/miniconda/envs/test/conda-bld/chimaera_*/work/vcpkg/buildtrees/margo/config-x64-linux-dbg-config.log
+          ls -lr /usr/share/miniconda/envs/test/conda-bld/chimaera_*/
+          #cat /usr/share/miniconda/envs/test/conda-bld/chimaera_*/
+          # work/vcpkg/buildtrees/margo/config-x64-linux-dbg-config.log
       # - name: upload
       #   uses: actions/upload-artifact@v4
       #   with:
