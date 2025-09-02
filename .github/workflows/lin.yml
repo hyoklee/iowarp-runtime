@@ -1,0 +1,23 @@
+name: lin
+
+on:
+  workflow_dispatch:
+  push:
+     branches:
+       - main
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: build
+        run: |
+          pip install -r requirements.txt
+          sh env.sh
+          cmake -B build .
+          make -C build -j
