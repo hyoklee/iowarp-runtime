@@ -15,29 +15,25 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
         with:
-          repository: iowarp/cte-hermes-shm
-          path: ./shm
-      - name: install shm
+          repository: iowarp/iowarp-install
+          path: ./install
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/vcpkg
+          path: ./vcpkg
+      - name: install vcpkg
         run: |
-          sudo apt update
-          sudo apt-get install -y catch2
-          sudo apt-get install -y cmake
-          sudo apt-get install -y libboost-all-dev
-          sudo apt-get install -y libcereal-dev
-          sudo apt-get install -y libyaml-cpp-dev
-          sudo apt-get install -y mpich
-          cd shm
-          mkdir build
-          cd build
-          cmake -DSITE:STRING="ubu" ..
-          ctest -T Build
-          sudo make install
+          cd vcpkg
+          cp -r ../install/ports ports/
+          . bootstrap-vcpkg.sh
+          ./vcpkg install cte-hermes-shm[core]
       - name: build
         run: |
-          sudo apt -y install  elfutils libomp-dev lmod
+          sudo apt -y install elfutils libomp-dev lmod
           . ./ci.sh
           pip --version
           pip install -r requirements.txt
           #          . ./env.sh
-          cmake -B build .
+          cmake -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg -B build .
           make -C build -j
