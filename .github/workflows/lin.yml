@@ -35,5 +35,5 @@ jobs:
           pip --version
           pip install -r requirements.txt
           #          . ./env.sh
-          cmake -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg -B build .
+          cmake -DCMAKE_TOOLCHAIN_FILE=/home/runner/work/iowarp-runtime/iowarp-runtime/vcpkg/scripts/buildsystems/vcpkg -B build .
           make -C build -j
