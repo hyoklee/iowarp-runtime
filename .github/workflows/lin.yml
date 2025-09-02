@@ -24,9 +24,9 @@ jobs:
           path: ./vcpkg
       - name: install vcpkg
         run: |
+          cp -r ./install/ports/* ./vcpkg/ports/
+          ./vcpkg/bootstrap-vcpkg.sh
           cd vcpkg
-          cp -r ../install/ports ports/
-          . bootstrap-vcpkg.sh
           ./vcpkg install cte-hermes-shm[core]
       - name: build
         run: |
