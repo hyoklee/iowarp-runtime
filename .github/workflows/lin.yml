@@ -38,6 +38,6 @@ jobs:
           . ./ci.sh
           pip --version
           pip install -r requirements.txt
-          . ./env.sh
+          #          . ./env.sh
           cmake -B build .
           make -C build -j
