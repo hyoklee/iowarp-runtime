@@ -36,7 +36,7 @@ jobs:
           ./vcpkg integrate install
       - name: build
         run: |
-          sudo apt -y install elfutils libomp-dev lmod build-essential cmake
+          sudo apt -y install elfutils libelf-dev libomp-dev lmod build-essential cmake
           . ./ci.sh
           pip --version
           pip install -r requirements.txt
