@@ -30,10 +30,10 @@ jobs:
           ./vcpkg install cte-hermes-shm[core]
       - name: build
         run: |
-          sudo apt -y install elfutils libomp-dev lmod
+          sudo apt -y install elfutils libomp-dev lmod build-essential cmake
           . ./ci.sh
           pip --version
           pip install -r requirements.txt
           #          . ./env.sh
-          cmake -DCMAKE_TOOLCHAIN_FILE=/home/runner/work/iowarp-runtime/iowarp-runtime/vcpkg/scripts/buildsystems/vcpkg -B build .
+          cmake -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/vcpkg/scripts/buildsystems/vcpkg.cmake -B build .
           make -C build -j
