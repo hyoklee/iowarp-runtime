@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+      - name: setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: checkout
         uses: actions/checkout@v4
         with:
@@ -21,13 +25,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: microsoft/vcpkg
+          ref: 2025.08.27
           path: ./vcpkg
       - name: install vcpkg
         run: |
           cp -r ./install/ports/* ./vcpkg/ports/
           ./vcpkg/bootstrap-vcpkg.sh
           cd vcpkg
-          ./vcpkg install cte-hermes-shm[core] mercury boost-regex boost-system boost-filesystem boost-fiber pybind11
+          export PYTHON_EXECUTABLE=$(which python3)
+          ./vcpkg install cte-hermes-shm[core] mercury boost-regex boost-system boost-filesystem boost-fiber pybind11 --x-use-system-binaries
           ./vcpkg integrate install
       - name: build
         run: |
