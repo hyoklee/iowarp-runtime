@@ -135,13 +135,15 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 add_library(runtime_deps INTERFACE)
 target_link_libraries(runtime_deps INTERFACE
     ${Boost_LIBRARIES}
-#    ${Boost_CONTEXT_LIBRARY}    
+#    ${Boost_CONTEXT_LIBRARY}
     ${OPTIONAL_LIBS}
     ${ALLOCATOR_LIBRARIES})
+target_link_options(runtime_deps INTERFACE
+    -Wl,--allow-multiple-definition)
 target_include_directories(runtime_deps INTERFACE
-    ${Boost_INCLUDE_DIRS})
+    $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>)
 target_link_directories(runtime_deps INTERFACE
-    ${Boost_LIBRARY_DIRS})
+    $<BUILD_INTERFACE:${Boost_LIBRARY_DIRS}>)
 target_compile_definitions(runtime_deps INTERFACE
     CHIMAERA_RUNTIME)
 

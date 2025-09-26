@@ -4,7 +4,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_subdirectory(boost)
-add_subdirectory(ipc)
+if(BUILD_MPI_TESTS)
+    add_subdirectory(ipc)
+endif()
 
 if(CHIMAERA_ENABLE_ROCM)
     add_subdirectory(rocm)
