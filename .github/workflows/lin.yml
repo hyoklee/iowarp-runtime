@@ -32,7 +32,7 @@ jobs:
           ./vcpkg/bootstrap-vcpkg.sh
           cd vcpkg
           export PYTHON_EXECUTABLE=$(which python3)
-          ./vcpkg install cte-hermes-shm[core] mercury boost-regex boost-system boost-filesystem boost-fiber pybind11 --overlay-ports=../install/ports
+          ./vcpkg install cte-hermes-shm[core] mercury boost-regex boost-system boost-filesystem boost-fiber boost-coroutine2 boost-stacktrace pybind11 --overlay-ports=../install/ports
           ./vcpkg integrate install
       - name: build
         run: |
