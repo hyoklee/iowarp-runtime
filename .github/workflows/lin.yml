@@ -41,7 +41,7 @@ jobs:
           pip --version
           pip install -r requirements.txt
           cmake \
-            -DSITE:STRING=ubunbu-24.04 -DBUILDNAME=chimaera 
+            -DSITE:STRING=ubunbu-24.04 -DBUILDNAME=chimaera \
             -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/vcpkg/scripts/buildsystems/vcpkg.cmake -B build . 
           make -C build -j
       - name: test
