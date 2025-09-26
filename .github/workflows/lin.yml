@@ -27,7 +27,7 @@ jobs:
           cp -r ./install/ports/* ./vcpkg/ports/
           ./vcpkg/bootstrap-vcpkg.sh
           cd vcpkg
-          ./vcpkg install cte-hermes-shm[core]
+          ./vcpkg install cte-hermes-shm[core] mercury
       - name: build
         run: |
           sudo apt -y install elfutils libomp-dev lmod build-essential cmake
