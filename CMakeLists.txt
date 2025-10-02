@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 3.25)
+
+# Set policy for FindBoost before project() to suppress vcpkg warning
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+
 project(chimaera)
 
 include(CTest)
@@ -126,7 +132,6 @@ set(CHIMAERA_EXPORTED_TARGETS "ChimaeraCore")
 # -----------------------------------------------------------------------------
 # Find Packages
 # -----------------------------------------------------------------------------
-cmake_policy(SET CMP0167 NEW)
 include(CMake/ChimaeraCommonConfig.cmake)
 
 # This is for compatability with CLANG + Spack
