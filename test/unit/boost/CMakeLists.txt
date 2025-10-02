@@ -20,8 +20,8 @@ target_include_directories(test_boost_exec PRIVATE ${Boost_INCLUDE_DIRS})
 # Test Cases
 #------------------------------------------------------------------------------
 
-#add_test(NAME test_boost COMMAND
-#        ${CMAKE_BINARY_DIR}/bin/test_messages "TestBoost")
+add_test(NAME test_boost COMMAND
+        ${CMAKE_BINARY_DIR}/bin/test_boost_exec)
 
 #------------------------------------------------------------------------------
 # Install Targets
