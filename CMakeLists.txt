@@ -126,6 +126,7 @@ set(CHIMAERA_EXPORTED_TARGETS "ChimaeraCore")
 # -----------------------------------------------------------------------------
 # Find Packages
 # -----------------------------------------------------------------------------
+cmake_policy(SET CMP0167 NEW)
 include(CMake/ChimaeraCommonConfig.cmake)
 
 # This is for compatability with CLANG + Spack
