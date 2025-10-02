@@ -17,6 +17,7 @@
 
 #include <queue>
 #include <thread>
+#include <unordered_map>
 
 #include "chimaera/api/chimaera_runtime.h"
 #include "chimaera/chimaera_types.h"
@@ -117,16 +118,61 @@ bool PrivateTaskMultiQueue::PushLocalTask(const DomainQuery &res_query,
   ContainerId container_id = res_query.sel_.id_;
   Container *exec = CHI_MOD_REGISTRY->GetContainer(task->pool_, container_id);
   if (!exec || !exec->is_created_) {
-    // If the container doesn't exist, it's probably going to get created.
-    // Put in the failed queue.
-    HELOG(kWarning,
-          "(node {}) For task {}, either pool={} or container={} does not yet "
-          "exist. If you "
-          "see this infinitely print, then the provided values were likely "
-          "erronous. Ctrl-C this to stop me from printing too much.",
-          CHI_CLIENT->node_id_, task->task_node_, task->pool_, container_id);
+    // Check if we have a retry count field in the task
+    // If not, initialize it to track retry attempts
+    static thread_local std::unordered_map<void*, std::pair<int, hshm::Timer>> retry_map;
+    auto task_ptr = task.ptr_;
+
+    // Get or initialize retry info for this task
+    auto &retry_info = retry_map[task_ptr];
+    auto &retry_count = retry_info.first;
+    auto &first_attempt_time = retry_info.second;
+
+    // Initialize timer on first attempt
+    if (retry_count == 0) {
+      first_attempt_time.Reset();
+    }
+
+    retry_count++;
+
+    // Configuration: max retries and timeout
+    const int MAX_RETRIES = 100;  // Prevent infinite retries
+    const double TIMEOUT_SECONDS = 30.0;  // 30 second timeout
+
+    double elapsed_time = first_attempt_time.GetSecFromStart();
+
+    // Check if we should give up
+    if (retry_count > MAX_RETRIES || elapsed_time > TIMEOUT_SECONDS) {
+      HELOG(kError,
+            "(node {}) GIVING UP on task {} after {} retries and {:.2f}s. "
+            "Pool={} or container={} never became available. "
+            "This likely indicates a configuration or initialization problem.",
+            CHI_CLIENT->node_id_, task->task_node_, retry_count, elapsed_time,
+            task->pool_, container_id);
+
+      // Clean up retry tracking for this task
+      retry_map.erase(task_ptr);
+
+      // Mark as failed permanently
+      return !GetFail().push(task).IsNull();
+    }
+
+    // Log warning with backoff to reduce spam
+    if (retry_count == 1 || retry_count % 20 == 0) {  // Log on first attempt and every 20th retry
+      HELOG(kWarning,
+            "(node {}) Attempt {} for task {}: pool={} or container={} does not yet "
+            "exist. Will retry (timeout in {:.1f}s).",
+            CHI_CLIENT->node_id_, retry_count, task->task_node_,
+            task->pool_, container_id, TIMEOUT_SECONDS - elapsed_time);
+    }
+
+    // Put in failed queue for retry
     return !GetFail().push(task).IsNull();
   }
+
+  // Success path: clean up any retry tracking for this task
+  static thread_local std::unordered_map<void*, std::pair<int, hshm::Timer>> retry_map;
+  retry_map.erase(task.ptr_);
   // Find the lane
   chi::Lane *chi_lane = exec->MapTaskToLane(task.ptr_);
   // if (rctx.load_.CalculateLoad()) {

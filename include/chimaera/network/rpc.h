@@ -403,7 +403,7 @@ class RpcContext {
     }
     // Get id of current host
     node_id_ = _FindThisHost();
-    if (node_id_ == 0 || node_id_ > (u32)hosts_.size()) {
+    if (node_id_ <= 0 || node_id_ > (u32)hosts_.size()) {
       HELOG(kFatal, "Couldn't identify this host.");
     }
   }
