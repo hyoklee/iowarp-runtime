@@ -1,0 +1,47 @@
+name: lin zmq
+
+on:
+  workflow_dispatch:
+  push:
+     branches:
+       - main
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          repository: hyoklee/iowarp-install
+          path: ./install
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/vcpkg
+          ref: 2025.08.27
+          path: ./vcpkg
+      - name: install vcpkg
+        run: |
+          ./vcpkg/bootstrap-vcpkg.sh
+          cd vcpkg
+          export PYTHON_EXECUTABLE=$(which python3)
+          ./vcpkg install cte-hermes-shm[core,thallium] mercury thallium argobots boost-regex boost-system boost-filesystem boost-fiber boost-coroutine2 boost-stacktrace pybind11 --overlay-ports=../install/ports
+          ./vcpkg integrate install
+      - name: build
+        run: |
+          sudo apt -y install elfutils libelf-dev libomp-dev lmod build-essential cmake
+          . ./ci.sh
+          pip --version
+          pip install -r requirements.txt
+          cmake \
+            -DSITE:STRING=ubunbu-24.04 -DBUILDNAME="chimaera/zmq" \
+            -DBUILD_ZeroMQ_TESTS=ON \
+            -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/vcpkg/scripts/buildsystems/vcpkg.cmake -B build .
+          ctest --test-dir build -D Experimental
