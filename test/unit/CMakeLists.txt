@@ -7,7 +7,6 @@ add_subdirectory(boost)
 
 if(BUILD_MPI_TESTS)
     add_subdirectory(ipc)
-    add_subdirectory(work_orchestrator)
 endif()
 
 if(CHIMAERA_ENABLE_ROCM)
