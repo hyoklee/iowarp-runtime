@@ -39,7 +39,7 @@ jobs:
       - name: build
         run: |
           sudo apt -y install elfutils libelf-dev libomp-dev lmod build-essential cmake
-          . ./ci.sh
+          # . ./ci.sh
           pip --version
           pip install -r requirements.txt
           cmake \
