@@ -25,8 +25,8 @@ target_compile_definitions(test_ipc_exec PRIVATE CHIMAERA_ENABLE_PYTHON)
 # ------------------------------------------------------------------------------
 
 # STRING TESTS
-# add_test(NAME test_ipc COMMAND
-# ${CMAKE_BINARY_DIR}/bin/test_messages "TestIpc")
+add_test(NAME test_ipc COMMAND
+${CMAKE_BINARY_DIR}/bin/test_ipc_exec)
 
 # ------------------------------------------------------------------------------
 # Install Targets
