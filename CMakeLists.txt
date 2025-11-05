@@ -1,242 +1,170 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.10)
+project(chimaera VERSION 1.0.0)
 
-# Set policy for FindBoost before project() to suppress vcpkg warning
-if(POLICY CMP0167)
-    cmake_policy(SET CMP0167 NEW)
-endif()
+# Read namespace from chimaera_repo.yaml in project root (function defined in ChimaeraCommon.cmake)
+# This will be called after the utilities are included below
 
-project(chimaera)
+#------------------------------------------------------------------------------
+# SECTION 1: OPTIONS
+#------------------------------------------------------------------------------
+option(CHIMAERA_ENABLE_CMAKE_DOTENV "Enable reading environment variables from .env.cmake" ON)
+option(CHIMAERA_ENABLE_TESTS "Enable testing" ON)
 
-include(CTest)
-enable_testing()
-
-# -----------------------------------------------------------------------------
-# Define Options
-# -----------------------------------------------------------------------------
-set(CHIMAERA_IS_MAIN_PROJECT ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)" ON)
-option(BUILD_TESTS "Build tests" ON)
-option(BUILD_MPI_TESTS "Build tests which depend on MPI" OFF)
-option(BUILD_OpenMP_TESTS "Build tests which depend on OpenMP" ON)
-option(BUILD_ZeroMQ_TESTS "Build tests which depend on ZeroMQ" OFF)
-option(CHIMAERA_BUILD_BENCHMARKS "Build chimaera benchmarks" OFF)
-option(CHIMAERA_ENABLE_COVERAGE "Check how well tests cover code" OFF)
-option(CHIMAERA_ENABLE_DOXYGEN "Check how well the code is documented" OFF)
-option(CHIMAERA_TASK_DEBUG "Debug tasks" OFF)
-option(CHIMAERA_REMOTE_DEBUG "Debug remote tasks" OFF)
-option(CHIMAERA_REMOTE_PRINT "Print remote tasks" OFF)
-option(CHIMAERA_ENABLE_JEMALLOC "Use jemalloc as the allocator" OFF)
-option(CHIMAERA_ENABLE_MIMALLOC "Use mimalloc as the allocator" OFF)
-option(CHIMAERA_ENABLE_PYTHON "Use pybind11" ON)
-option(CHIMAERA_ENABLE_ROCM "Enable ROCm support" OFF)
-option(CHIMAERA_ENABLE_CUDA "Enable CUDA support" OFF)
-option(CHIMAERA_ENABLE_CMAKE_DOTENV "Use cmake dotenv" OFF)
-
-# A hack for spack to get dependencies
-option(CHIMAERA_NO_COMPILE "Don't compile the code" OFF)
-
-if(CHIMAERA_NO_COMPILE)
-    # Copy tasks/MOD_NAME directory to ~/.chimaera during configure
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/tasks/MOD_NAME
-        DESTINATION $ENV{HOME}/.chimaera)
-
-    install(
-        FILES
-        ${CMAKE_SOURCE_DIR}/.gitignore
-        DESTINATION
-        ${CMAKE_INSTALL_PREFIX}/.gitignore
-    )
-    return()
-endif()
-
-# ------------------------------------------------------------------------------
-# DOTENV
-# ------------------------------------------------------------------------------
+# Read environment variables from .env.cmake if enabled
 if(CHIMAERA_ENABLE_CMAKE_DOTENV)
-    if(EXISTS ${CMAKE_SOURCE_DIR}/.env.cmake)
-        include(.env.cmake)
-    endif()
+  if(EXISTS "${CMAKE_SOURCE_DIR}/.env.cmake")
+    include("${CMAKE_SOURCE_DIR}/.env.cmake")
+  endif()
 endif()
 
-# -----------------------------------------------------------------------------
-# Compiler Optimization
-# -----------------------------------------------------------------------------
+# Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message("IN DEBUG MODE")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0")
-    set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -g -O0")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -g -G")
-    add_compile_definitions(HSHM_DEBUG)
-else()
-    message("IN RELEASE MODE")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O3")
-endif()
-
-# add_compile_options(-march=native -fomit-frame-pointer)
-if(CHIMAERA_REMOTE_DEBUG)
-    message("Adding the chimaera remote debug option")
-    add_compile_definitions(CHIMAERA_REMOTE_DEBUG)
-    set(CHIMAERA_REMOTE_PRINT ON)
-endif()
-
-if(CHIMAERA_REMOTE_PRINT)
-    add_compile_definitions(kRemoteQueue=0)
-endif()
-
-if(CHIMAERA_TASK_DEBUG)
-    message("Adding the chimaera task debug option")
-    add_compile_definitions(CHIMAERA_TASK_DEBUG)
-endif()
-
-# ------------------------------------------------------------------------------
-# Setup CMake Environment
-# ------------------------------------------------------------------------------
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
-    ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all Executables.")
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
-    ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all Libraries")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
-    ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all static libraries.")
-
-# ------------------------------------------------------------------------------
-# Setup install and output Directories
-# ------------------------------------------------------------------------------
-if(NOT CHIMAERA_INSTALL_BIN_DIR)
-    set(CHIMAERA_INSTALL_BIN_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-endif()
-
-if(NOT CHIMAERA_INSTALL_LIB_DIR)
-    set(CHIMAERA_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-endif()
-
-if(NOT CHIMAERA_INSTALL_INCLUDE_DIR)
-    set(CHIMAERA_INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
-endif()
-
-if(NOT CHIMAERA_INSTALL_DATA_DIR)
-    set(CHIMAERA_INSTALL_DATA_DIR ${CMAKE_INSTALL_PREFIX}/share)
-endif()
-
-# -----------------------------------------------------------------------------
-# Targets built within this project are exported at Install time for use
-# by other projects.
-# -----------------------------------------------------------------------------
-set(CHIMAERA_EXPORTED_TARGETS "ChimaeraCore")
-
-# -----------------------------------------------------------------------------
-# Find Packages
-# -----------------------------------------------------------------------------
-include(CMake/ChimaeraCommonConfig.cmake)
-
-# This is for compatability with CLANG + Spack
+# Enable compile commands export
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-list(APPEND CMAKE_BUILD_RPATH "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-list(APPEND CMAKE_INSTALL_RPATH "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-list(APPEND CMAKE_INSTALL_RPATH "${CHIMAERA_INSTALL_LIB_DIR}")
-set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-# Dependencies for the runtime
-add_library(runtime_deps INTERFACE)
-target_link_libraries(runtime_deps INTERFACE
-    ${Boost_LIBRARIES}
-#    ${Boost_CONTEXT_LIBRARY}
-    ${OPTIONAL_LIBS}
-    ${ALLOCATOR_LIBRARIES})
-target_link_options(runtime_deps INTERFACE
-    -Wl,--allow-multiple-definition)
-target_include_directories(runtime_deps INTERFACE
-    $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>)
-target_link_directories(runtime_deps INTERFACE
-    $<BUILD_INTERFACE:${Boost_LIBRARY_DIRS}>)
-target_compile_definitions(runtime_deps INTERFACE
-    CHIMAERA_RUNTIME)
+# Enable RPATH
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
-if(CHIMAERA_ENABLE_PYTHON)
-    target_compile_definitions(runtime_deps INTERFACE
-        CHIMAERA_ENABLE_PYTHON)
+#------------------------------------------------------------------------------
+# SECTION 2: COMPILER OPTIMIZATION
+#------------------------------------------------------------------------------
+# Add compiler flags following Google C++ style guide
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+# Disable some problematic warnings for external dependencies
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-unused-variable")
+
+# Debug configuration
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -DDEBUG")
+
+# Release configuration
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
+
+
+#------------------------------------------------------------------------------
+# SECTION 3: CHIMOD CMAKE UTILITIES AND DEPENDENCIES
+#------------------------------------------------------------------------------
+# Include common utilities and dependencies early so find_package calls are available
+include(cmake/ChimaeraCommon.cmake)
+
+#------------------------------------------------------------------------------
+# SECTION 4: DEPENDENCY VERIFICATION
+#------------------------------------------------------------------------------
+# Verify that required dependencies were found by ChimaeraCommon.cmake
+if(NOT HermesShm_FOUND)
+  message(FATAL_ERROR "Hermes SHM (HSHM) not found")
 endif()
+message(STATUS "found hermes_shm at ${HermesShm_PREFIX}")
 
-# Create an imported target for chimaera::run which links to chimaera_runtime
-add_library(chimaera::run ALIAS runtime_deps)
+# Note: ZeroMQ support disabled for stub implementation
 
-# -----------------------------------------------------------------------------
-# Build Chimaera Main Packages
-# -----------------------------------------------------------------------------
-# Main includes
-include_directories(${CMAKE_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+#------------------------------------------------------------------------------
+# SECTION 5: SOURCE COMPILATION
+#------------------------------------------------------------------------------
+# Include directories
+include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${HermesShm_INCLUDE_DIRS})
 
-# Task includes
-include_directories(${CMAKE_SOURCE_DIR}/tasks)
-include_directories(${CMAKE_SOURCE_DIR}/tasks/chimaera_admin/include)
-include_directories(${CMAKE_SOURCE_DIR}/tasks/small_message/include)
-include_directories(${CMAKE_SOURCE_DIR}/tasks/remote_queue/include)
-include_directories(${CMAKE_SOURCE_DIR}/tasks/worch_proc_round_robin/include)
-include_directories(${CMAKE_SOURCE_DIR}/tasks/worch_queue_round_robin/include)
-include_directories(${CMAKE_SOURCE_DIR}/tasks/proc_queue/include)
-include_directories(${CMAKE_SOURCE_DIR}/tasks/bdev/include)
+# Set output directories for binaries and libraries
+# Put all outputs in bin directory for easier access
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(TEST_MAIN ${CMAKE_SOURCE_DIR}/test/unit)
+# Add utilities subdirectory FIRST so chi_refresh_repo builds before everything else
+add_subdirectory(util)
+
+# Add source subdirectory to build main library
 add_subdirectory(src)
-add_subdirectory(tasks)
 
-if(BUILD_TESTS)
-    add_subdirectory(test)
+# Read namespace from chimaera_repo.yaml in project root
+read_repo_namespace(CHIMAERA_NAMESPACE "${CMAKE_SOURCE_DIR}")
+# Set namespace as cache variable so it's available to all CMakeLists.txt
+set(CHIMAERA_NAMESPACE "${CHIMAERA_NAMESPACE}" CACHE STRING "Project namespace for chimod targets")
+message(STATUS "Chimaera namespace: ${CHIMAERA_NAMESPACE}")
+
+# Add chimods subdirectory
+add_subdirectory(chimods)
+
+# Add benchmark subdirectory
+add_subdirectory(benchmark)
+
+# Add test subdirectory if testing is enabled
+if(CHIMAERA_ENABLE_TESTS)
+  enable_testing()
+  add_subdirectory(test)
+  message(STATUS "Unit tests enabled - added test subdirectory")
 endif()
 
-if(CHIMAERA_BUILD_BENCHMARKS)
-    add_subdirectory(benchmark)
-endif()
+#------------------------------------------------------------------------------
+# SECTION 6: JARVIS INTEGRATION
+#------------------------------------------------------------------------------ 
+# Add Jarvis WRP runtime packages
+jarvis_repo_add(${CMAKE_SOURCE_DIR}/test/jarvis_wrp_runtime "")
 
-# -----------------------------------------------------------------------------
-# Build + Enable Testing
-# -----------------------------------------------------------------------------
-add_custom_target(lint COMMAND bash ${CMAKE_SOURCE_DIR}/ci/lint.sh ${CMAKE_SOURCE_DIR})
+#------------------------------------------------------------------------------
+# SECTION 7: INSTALL CODE
+#------------------------------------------------------------------------------
+# Install the main chimaera library using the same dynamic system as modules
+set(MAIN_EXPORT_NAME "${CHIMAERA_NAMESPACE}_coreTargets")
+set(MAIN_PACKAGE_NAME "${CHIMAERA_NAMESPACE}")
 
-# General function used to hook ctest to python test tool lib
-function(jarvis_test test_type test_name)
-    add_test(NAME ${test_name}
-        COMMAND jarvis pipeline run yaml "${CMAKE_SOURCE_DIR}/test/unit/jarvis_chimaera/pipelines/${test_type}/${test_name}.yaml")
-endfunction()
-
-if(BUILD_TESTS)
-    enable_testing()
-endif()
-
-# -----------------------------------------------------------------------------
-# Install Chimaera Headers
-# -----------------------------------------------------------------------------
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/CMake/ChimaeraConfig.cmake
-    ${PROJECT_BINARY_DIR}/CMakeFiles/ChimaeraConfig.cmake @ONLY
+# Install main library
+install(TARGETS cxx
+  EXPORT ${MAIN_EXPORT_NAME}
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  PUBLIC_HEADER DESTINATION include/chimaera
+  INCLUDES DESTINATION include
 )
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/CMake/ChimaeraCommonConfig.cmake
-    ${PROJECT_BINARY_DIR}/CMakeFiles/ChimaeraCommonConfig.cmake @ONLY
+
+# Install headers
+install(DIRECTORY include/chimaera
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
 )
-install(
-    FILES
-    ${PROJECT_BINARY_DIR}/CMakeFiles/ChimaeraConfig.cmake
-    ${PROJECT_BINARY_DIR}/CMakeFiles/ChimaeraCommonConfig.cmake
-    DESTINATION
-    ${CMAKE_INSTALL_PREFIX}/cmake
+
+# Install config files
+install(DIRECTORY config/
+  DESTINATION etc/chimaera
+  FILES_MATCHING PATTERN "*"
 )
-install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-# copy tasks/MOD_NAME to HOME directory
-# Create .chimaera directory in home if it doesn't exist
-file(MAKE_DIRECTORY "$ENV{HOME}/.chimaera")
+# Export targets file for main library
+install(EXPORT ${MAIN_EXPORT_NAME}
+  FILE ${MAIN_EXPORT_NAME}.cmake
+  NAMESPACE ${CHIMAERA_NAMESPACE}::
+  DESTINATION lib/cmake/${MAIN_PACKAGE_NAME}
+)
 
-# Copy tasks/MOD_NAME directory to ~/.chimaera during configure
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/tasks/MOD_NAME
-    DESTINATION $ENV{HOME}/.chimaera)
+# Generate and install package config file for main library
+include(CMakePackageConfigHelpers)
 
-# Install jarvis repo
-jarvis_repo_add("${CMAKE_SOURCE_DIR}/test/jarvis_chimaera" "${CMAKE_SOURCE_DIR}/test/jarvis_chimaera/pipelines")
+configure_package_config_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ChimaeraConfig.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/${MAIN_PACKAGE_NAME}Config.cmake"
+  INSTALL_DESTINATION lib/cmake/${MAIN_PACKAGE_NAME}
+)
+
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/${MAIN_PACKAGE_NAME}ConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/${MAIN_PACKAGE_NAME}Config.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/${MAIN_PACKAGE_NAME}ConfigVersion.cmake"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ChimaeraCommon.cmake"
+  DESTINATION lib/cmake/${MAIN_PACKAGE_NAME}
+)
+
+message(STATUS "Created core package: ${MAIN_PACKAGE_NAME}")
+message(STATUS "  Export set: ${MAIN_EXPORT_NAME}")
+message(STATUS "  Config location: lib/cmake/${MAIN_PACKAGE_NAME}")
